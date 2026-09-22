@@ -116,9 +116,9 @@ export class ChatwootPlatformService {
       },
     });
 
-    if (!account?.id || !user?.id || !user?.access_token) {
+    if (!account?.id || !user?.id) {
       throw new BadRequestException(
-        'O Chatwoot não retornou as credenciais esperadas para o tenant',
+        'O Chatwoot não retornou a conta ou usuário esperados para o tenant',
       );
     }
 
@@ -129,6 +129,17 @@ export class ChatwootPlatformService {
         role: 'administrator',
       },
     );
+
+    const tokenResult = await this.request(
+      `/platform/api/v1/users/${user.id}/token`,
+      {},
+    );
+
+    if (!tokenResult?.access_token) {
+      throw new BadRequestException(
+        'O Chatwoot não retornou o token interno do tenant',
+      );
+    }
 
     await this.prisma.integration.upsert({
       where: {
@@ -145,7 +156,7 @@ export class ChatwootPlatformService {
           accountId: String(account.id),
           userId: String(user.id),
         },
-        secretRef: this.secrets.encrypt(String(user.access_token)),
+        secretRef: this.secrets.encrypt(String(tokenResult.access_token)),
       },
       update: {
         enabled: true,
@@ -153,14 +164,14 @@ export class ChatwootPlatformService {
           accountId: String(account.id),
           userId: String(user.id),
         },
-        secretRef: this.secrets.encrypt(String(user.access_token)),
+        secretRef: this.secrets.encrypt(String(tokenResult.access_token)),
       },
     });
 
     return {
       accountId: String(account.id),
       userId: String(user.id),
-      accessToken: String(user.access_token),
+      accessToken: String(tokenResult.access_token),
       url: this.baseUrl(),
     };
   }
