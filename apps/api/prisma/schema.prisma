@@ -1,11 +1,140 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql" url = env("DATABASE_URL") }
-enum UserRole { OWNER ADMIN MANAGER AGENT MARKETING VIEWER }
-model User { id String @id @default(cuid()) email String @unique name String passwordHash String createdAt DateTime @default(now()) updatedAt DateTime @updatedAt memberships Membership[] }
-model Organization { id String @id @default(cuid()) name String slug String @unique createdAt DateTime @default(now()) updatedAt DateTime @updatedAt memberships Membership[] contacts Contact[] pipelines Pipeline[] deals Deal[] integrations Integration[] }
-model Membership { id String @id @default(cuid()) userId String organizationId String role UserRole @default(AGENT) createdAt DateTime @default(now()) user User @relation(fields:[userId],references:[id],onDelete:Cascade) organization Organization @relation(fields:[organizationId],references:[id],onDelete:Cascade) @@unique([userId,organizationId]) @@index([organizationId]) }
-model Contact { id String @id @default(cuid()) organizationId String firstName String lastName String? email String? phone String? tags String[] externalRefs Json? createdAt DateTime @default(now()) updatedAt DateTime @updatedAt organization Organization @relation(fields:[organizationId],references:[id],onDelete:Cascade) deals Deal[] @@index([organizationId]) @@index([organizationId,email]) @@index([organizationId,phone]) }
-model Pipeline { id String @id @default(cuid()) organizationId String name String createdAt DateTime @default(now()) updatedAt DateTime @updatedAt organization Organization @relation(fields:[organizationId],references:[id],onDelete:Cascade) stages PipelineStage[] deals Deal[] @@index([organizationId]) }
-model PipelineStage { id String @id @default(cuid()) pipelineId String name String position Int createdAt DateTime @default(now()) pipeline Pipeline @relation(fields:[pipelineId],references:[id],onDelete:Cascade) deals Deal[] @@unique([pipelineId,position]) }
-model Deal { id String @id @default(cuid()) organizationId String pipelineId String stageId String contactId String? title String valueCents Int @default(0) currency String @default("BRL") status String @default("OPEN") createdAt DateTime @default(now()) updatedAt DateTime @updatedAt organization Organization @relation(fields:[organizationId],references:[id],onDelete:Cascade) pipeline Pipeline @relation(fields:[pipelineId],references:[id],onDelete:Cascade) stage PipelineStage @relation(fields:[stageId],references:[id],onDelete:Restrict) contact Contact? @relation(fields:[contactId],references:[id],onDelete:SetNull) @@index([organizationId]) }
-model Integration { id String @id @default(cuid()) organizationId String provider String enabled Boolean @default(false) config Json? secretRef String? createdAt DateTime @default(now()) updatedAt DateTime @updatedAt organization Organization @relation(fields:[organizationId],references:[id],onDelete:Cascade) @@unique([organizationId,provider]) }
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  MANAGER
+  AGENT
+  MARKETING
+  VIEWER
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  memberships  Membership[]
+}
+
+model Organization {
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  memberships  Membership[]
+  contacts     Contact[]
+  pipelines    Pipeline[]
+  deals        Deal[]
+  integrations Integration[]
+}
+
+model Membership {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  role           UserRole     @default(AGENT)
+  createdAt      DateTime     @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+}
+
+model Contact {
+  id             String       @id @default(cuid())
+  organizationId String
+  firstName      String
+  lastName       String?
+  email          String?
+  phone          String?
+  tags           String[]     @default([])
+  externalRefs   Json?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  deals        Deal[]
+
+  @@index([organizationId])
+  @@index([organizationId, email])
+  @@index([organizationId, phone])
+}
+
+model Pipeline {
+  id             String          @id @default(cuid())
+  organizationId String
+  name           String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stages       PipelineStage[]
+  deals        Deal[]
+
+  @@index([organizationId])
+}
+
+model PipelineStage {
+  id         String   @id @default(cuid())
+  pipelineId String
+  name       String
+  position   Int
+  createdAt  DateTime @default(now())
+
+  pipeline Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  deals    Deal[]
+
+  @@unique([pipelineId, position])
+  @@index([pipelineId])
+}
+
+model Deal {
+  id             String   @id @default(cuid())
+  organizationId String
+  pipelineId     String
+  stageId        String
+  contactId      String?
+  title          String
+  valueCents     Int      @default(0)
+  currency       String   @default("BRL")
+  status         String   @default("OPEN")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  pipeline     Pipeline      @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  stage        PipelineStage @relation(fields: [stageId], references: [id], onDelete: Restrict)
+  contact      Contact?      @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([pipelineId])
+  @@index([stageId])
+}
+
+model Integration {
+  id             String   @id @default(cuid())
+  organizationId String
+  provider       String
+  enabled        Boolean  @default(false)
+  config         Json?
+  secretRef      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, provider])
+}
