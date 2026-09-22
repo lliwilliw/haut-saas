@@ -10,6 +10,7 @@ import { PrismaService } from './prisma.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { ChatwootPlatformService } from './chatwoot-platform.service';
 import { AuditService } from './audit.service';
+import { assertRole } from './roles';
 
 @UseGuards(JwtAuthGuard)
 @Controller('integrations/whatsapp')
@@ -174,6 +175,8 @@ export class WhatsAppController {
 
   @Post('setup')
   async setup(@Req() req: any) {
+    assertRole(req.user.role, ['OWNER', 'ADMIN']);
+
     const organizationId = req.user.organizationId;
     const organization = await this.prisma.organization.findUnique({
       where: { id: organizationId },
@@ -294,6 +297,8 @@ export class WhatsAppController {
 
   @Post('connect')
   async connect(@Req() req: any) {
+    assertRole(req.user.role, ['OWNER', 'ADMIN']);
+
     const mapping = await this.tenantMapping(req.user.organizationId);
 
     if (!mapping.instanceName) {
