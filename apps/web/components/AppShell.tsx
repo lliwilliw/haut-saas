@@ -22,6 +22,7 @@ export default function AppShell({
           <Link href="/contacts">Contatos</Link>
           <Link href="/crm">CRM</Link>
           <Link href="/integrations">Canais</Link>
+          <Link href="/team">Equipe</Link>
         </nav>
       </aside>
 
