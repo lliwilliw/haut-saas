@@ -18,7 +18,7 @@ Crie Redis, deixe o Easypanel gerar a senha e copie a **Internal Connection URL*
 
 ## 3) saas-api
 
-Source: GitHub ou Upload deste ZIP.
+Source: GitHub ou Git.
 
 - Build Path: `/`
 - Builder: Dockerfile
@@ -44,9 +44,6 @@ MAUTIC_CLIENT_SECRET=
 
 EVOLUTION_API_URL=https://DOMINIO_DA_EVOLUTION
 EVOLUTION_API_KEY=SUA_CHAVE_GLOBAL
-
-ACTIVEPIECES_URL=https://DOMINIO_DO_ACTIVEPIECES
-ACTIVEPIECES_API_KEY=
 ```
 
 Crie domínio temporário e teste `https://DOMINIO_DA_API/health`. Deve retornar `{"status":"ok",...}`.
@@ -79,8 +76,9 @@ Crie domínio temporário. Depois volte ao `saas-api`, ajuste `CORS_ORIGIN` para
 4. Crie um contato.
 5. Crie um negócio no CRM.
 6. Abra Integrações.
-7. Evolution deve aparecer alcançável se URL e chave estiverem corretas.
-8. As instâncias da Evolution aparecem na mesma tela.
+7. Chatwoot, Mautic e Evolution devem aparecer alcançáveis quando configurados.
+8. A seção WhatsApp mostra as instâncias Evolution sem token ou dados internos.
+9. Use o botão **Abrir Evolution Manager** para verificar conexão, QR Code e estado da sessão.
 
 ## Próximo módulo
 
