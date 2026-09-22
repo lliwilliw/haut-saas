@@ -9,6 +9,7 @@ import {
 import { PrismaService } from './prisma.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { ChatwootPlatformService } from './chatwoot-platform.service';
+import { AuditService } from './audit.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller('integrations/whatsapp')
@@ -16,6 +17,7 @@ export class WhatsAppController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly chatwoot: ChatwootPlatformService,
+    private readonly audit: AuditService,
   ) {}
 
   private evolution() {
@@ -275,6 +277,14 @@ export class WhatsAppController {
 
     const instance = await this.fetchInstance(instanceName);
 
+    await this.audit.write({
+      organizationId,
+      userId: req.user.userId,
+      action: 'channel.whatsapp.setup',
+      resourceType: 'Integration',
+      resourceId: mapping.integration?.id || null,
+    });
+
     return {
       configured: true,
       instance: this.sanitize(instance),
@@ -306,6 +316,14 @@ export class WhatsAppController {
         `Evolution HTTP ${response.status}`,
       );
     }
+
+    await this.audit.write({
+      organizationId: req.user.organizationId,
+      userId: req.user.userId,
+      action: 'channel.whatsapp.reconnect',
+      resourceType: 'Integration',
+      resourceId: mapping.integration?.id || null,
+    });
 
     return {
       instance: this.sanitize(
