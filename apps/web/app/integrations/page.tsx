@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppShell from '../../components/AppShell';
 import { api } from '../../lib/api';
@@ -19,20 +19,42 @@ export default function Integrations() {
   const router = useRouter();
   const [status, setStatus] = useState<any>({});
   const [instances, setInstances] = useState<any[]>([]);
+  const [connecting, setConnecting] = useState<string | null>(null);
+  const [notice, setNotice] = useState('');
 
-  useEffect(() => {
-    Promise.all([
+  const load = useCallback(async () => {
+    const [integrationStatus, evolution] = await Promise.all([
       api('/integrations/status'),
       api('/integrations/evolution/instances'),
-    ])
-      .then(([integrationStatus, evolution]) => {
-        setStatus(integrationStatus);
-        setInstances(
-          Array.isArray(evolution.instances) ? evolution.instances : [],
-        );
-      })
-      .catch(() => router.push('/login'));
-  }, [router]);
+    ]);
+
+    setStatus(integrationStatus);
+    setInstances(Array.isArray(evolution.instances) ? evolution.instances : []);
+  }, []);
+
+  useEffect(() => {
+    load().catch(() => router.push('/login'));
+  }, [load, router]);
+
+  async function connectChatwoot(instanceName: string) {
+    setConnecting(instanceName);
+    setNotice('');
+
+    try {
+      const result = await api(
+        `/integrations/evolution/instances/${encodeURIComponent(instanceName)}/chatwoot`,
+        { method: 'POST' },
+      );
+      setNotice(
+        `Chatwoot conectado. Inbox criada/validada: ${result.inboxName}.`,
+      );
+      await load();
+    } catch (error: any) {
+      setNotice(error?.message || 'Não foi possível conectar ao Chatwoot.');
+    } finally {
+      setConnecting(null);
+    }
+  }
 
   return (
     <AppShell title="Integrações">
@@ -56,6 +78,18 @@ export default function Integrations() {
                 Credencial:{' '}
                 {integration.credentialsConfigured ? 'configurada' : 'pendente'}
               </p>
+
+              {key === 'chatwoot' && integration.appUrl ? (
+                <a
+                  className="btn secondary"
+                  href={integration.appUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ display: 'inline-flex', marginTop: 4 }}
+                >
+                  Abrir Chatwoot
+                </a>
+              ) : null}
             </div>
           );
         })}
@@ -89,6 +123,20 @@ export default function Integrations() {
             </a>
           ) : null}
         </div>
+
+        {notice ? (
+          <p
+            style={{
+              margin: '16px 0 0',
+              padding: '10px 12px',
+              border: '1px solid var(--border)',
+              borderRadius: 9,
+              background: '#f9fafb',
+            }}
+          >
+            {notice}
+          </p>
+        ) : null}
 
         {instances.length ? (
           <div
@@ -143,7 +191,7 @@ export default function Integrations() {
                   </div>
                 )}
 
-                <div style={{ flex: '1 1 240px' }}>
+                <div style={{ flex: '1 1 220px' }}>
                   <div
                     style={{
                       display: 'flex',
@@ -159,6 +207,13 @@ export default function Integrations() {
                       className={`badge ${instance.connected ? 'ok' : 'bad'}`}
                     >
                       {instance.connected ? 'Conectado' : 'Desconectado'}
+                    </span>
+                    <span
+                      className={`badge ${instance.chatwootConnected ? 'ok' : ''}`}
+                    >
+                      {instance.chatwootConnected
+                        ? 'Chatwoot conectado'
+                        : 'Chatwoot pendente'}
                     </span>
                   </div>
 
@@ -181,6 +236,27 @@ export default function Integrations() {
                   <span>{instance.contactCount} contatos</span>
                   <span>{instance.chatCount} chats</span>
                 </div>
+
+                {!instance.chatwootConnected ? (
+                  <button
+                    className="btn"
+                    disabled={!instance.connected || connecting === instance.name}
+                    onClick={() => connectChatwoot(instance.name)}
+                  >
+                    {connecting === instance.name
+                      ? 'Conectando...'
+                      : 'Conectar ao Chatwoot'}
+                  </button>
+                ) : status.chatwoot?.appUrl ? (
+                  <a
+                    className="btn secondary"
+                    href={status.chatwoot.appUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Ver conversas
+                  </a>
+                ) : null}
               </div>
             ))}
           </div>
