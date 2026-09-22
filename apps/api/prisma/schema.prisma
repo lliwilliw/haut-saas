@@ -17,13 +17,15 @@ enum UserRole {
 }
 
 model User {
-  id           String       @id @default(cuid())
-  email        String       @unique
-  name         String
-  passwordHash String
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  memberships  Membership[]
+  id              String       @id @default(cuid())
+  email           String       @unique
+  name            String
+  passwordHash    String
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  memberships     Membership[]
+  invitationsSent Invitation[] @relation("InvitationInvitedBy")
+  auditLogs       AuditLog[]
 }
 
 model Organization {
@@ -37,6 +39,9 @@ model Organization {
   pipelines    Pipeline[]
   deals        Deal[]
   integrations Integration[]
+  invitations  Invitation[]
+  vaultSecrets VaultSecret[]
+  auditLogs    AuditLog[]
 }
 
 model Membership {
@@ -45,25 +50,80 @@ model Membership {
   organizationId String
   role           UserRole     @default(AGENT)
   createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([userId, organizationId])
   @@index([organizationId])
+  @@index([userId])
+}
+
+model Invitation {
+  id              String       @id @default(cuid())
+  organizationId  String
+  email           String
+  role            UserRole     @default(AGENT)
+  tokenHash       String       @unique
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  revokedAt       DateTime?
+  invitedByUserId String
+  createdAt       DateTime     @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy    User         @relation("InvitationInvitedBy", fields: [invitedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, email])
+  @@index([organizationId, createdAt])
+}
+
+model VaultSecret {
+  id             String   @id @default(cuid())
+  organizationId String
+  namespace      String
+  key            String
+  ciphertext     String
+  maskedValue    String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  rotatedAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, namespace, key])
+  @@index([organizationId, namespace])
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  action         String
+  resourceType   String
+  resourceId     String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([userId, createdAt])
 }
 
 model Contact {
-  id             String       @id @default(cuid())
+  id             String   @id @default(cuid())
   organizationId String
   firstName      String
   lastName       String?
   email          String?
   phone          String?
-  tags           String[]     @default([])
+  tags           String[] @default([])
   externalRefs   Json?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   deals        Deal[]
@@ -74,11 +134,11 @@ model Contact {
 }
 
 model Pipeline {
-  id             String          @id @default(cuid())
+  id             String   @id @default(cuid())
   organizationId String
   name           String
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   stages       PipelineStage[]
