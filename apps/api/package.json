@@ -1,0 +1,6 @@
+{
+  "name":"@haut/api","version":"0.1.0","private":true,
+  "scripts":{"dev":"nest start --watch","build":"nest build","start:prod":"node dist/main.js","prisma:generate":"prisma generate","prisma:migrate:deploy":"prisma migrate deploy"},
+  "dependencies":{"@nestjs/common":"^11.0.11","@nestjs/config":"^4.0.1","@nestjs/core":"^11.0.11","@nestjs/jwt":"^11.0.0","@nestjs/platform-express":"^11.0.11","@prisma/client":"^6.4.1","bcryptjs":"^3.0.2","class-transformer":"^0.5.1","class-validator":"^0.14.1","reflect-metadata":"^0.2.2","rxjs":"^7.8.2"},
+  "devDependencies":{"@nestjs/cli":"^11.0.5","@types/node":"^22.13.10","prisma":"^6.4.1","typescript":"^5.7.3"}
+}
