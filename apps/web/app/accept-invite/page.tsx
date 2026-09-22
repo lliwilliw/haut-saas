@@ -1,17 +1,21 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { FormEvent, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { setToken } from '../../lib/api';
 
 export default function AcceptInvitePage() {
   const router = useRouter();
-  const params = useSearchParams();
-  const token = params.get('token') || '';
+  const [token, setTokenParam] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setTokenParam(params.get('token') || '');
+  }, []);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
