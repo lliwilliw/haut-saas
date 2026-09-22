@@ -1,6 +1,6 @@
 # Haut SaaS Starter
 
-Base executável para centralizar Chatwoot, Mautic, Evolution API e Activepieces atrás de um frontend/backend próprio.
+Base executável para centralizar Chatwoot, Mautic e Evolution API atrás de um frontend/backend próprio.
 
 ## Incluído
 
@@ -13,8 +13,9 @@ Base executável para centralizar Chatwoot, Mautic, Evolution API e Activepieces
 - organização multi-tenant inicial
 - contatos
 - pipeline CRM e negócios
-- status das quatro integrações
-- leitura de instâncias Evolution pelo backend
+- status das três integrações principais
+- leitura segura de instâncias Evolution pelo backend
+- visualização amigável das instâncias WhatsApp, sem expor tokens
 - Dockerfiles para Easypanel
 - Docker Compose para teste local
 
@@ -35,8 +36,8 @@ Veja `EASYPANEL.md`.
 
 ## Escopo desta versão
 
-Isto é a fundação funcional do produto, não o SaaS final inteiro. Ainda faltam a inbox própria, webhooks, sincronização bidirecional de contatos/mensagens, campanhas Mautic, billing, Meta Cloud API e Google/Meta Ads. A estrutura já está separada para implementar esses módulos sem refazer o núcleo.
+Isto é a fundação funcional do produto, não o SaaS final inteiro. Ainda faltam a inbox própria, webhooks, sincronização bidirecional de contatos/mensagens, campanhas Mautic, billing, Meta Cloud API e Google/Meta Ads. As automações centrais ficam no backend/worker próprio; não há dependência de Activepieces.
 
 ## Segurança
 
-Não coloque chaves reais no Git. Use Environment do Easypanel e rotacione segredos já expostos em chats/logs.
+Não coloque chaves reais no Git. Use Environment do Easypanel e rotacione segredos já expostos em chats/logs. O backend filtra a resposta da Evolution antes de enviá-la ao navegador para não expor o token da instância.
