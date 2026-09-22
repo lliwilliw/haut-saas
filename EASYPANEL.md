@@ -68,6 +68,16 @@ Nos logs deve aparecer `waiting for integration-sync jobs`.
 
 Crie domínio temporário. Depois volte ao `saas-api`, ajuste `CORS_ORIGIN` para esse domínio e faça redeploy.
 
+## Evolution -> Chatwoot
+
+Para permitir que a Evolution crie uma Inbox API no Chatwoot e sincronize mensagens, o serviço da Evolution precisa ter:
+
+```env
+CHATWOOT_ENABLED=true
+```
+
+Depois faça redeploy da Evolution. Na tela **Integrações** do Haut SaaS, use **Conectar ao Chatwoot** na instância WhatsApp. O backend usa as credenciais do Chatwoot configuradas no `saas-api` e não as expõe ao navegador.
+
 ## Teste funcional
 
 1. Abra `saas-web`.
@@ -78,12 +88,14 @@ Crie domínio temporário. Depois volte ao `saas-api`, ajuste `CORS_ORIGIN` para
 6. Abra Integrações.
 7. Chatwoot, Mautic e Evolution devem aparecer alcançáveis quando configurados.
 8. A seção WhatsApp mostra as instâncias Evolution sem token ou dados internos.
-9. Use o botão **Abrir Evolution Manager** para verificar conexão, QR Code e estado da sessão.
+9. Use **Conectar ao Chatwoot** para criar/vincular a Inbox.
+10. Abra o Chatwoot e envie uma mensagem de outro número para validar entrada e resposta.
+11. Use **Abrir Evolution Manager** para diagnóstico de sessão, QR Code e conexão.
 
 ## Próximo módulo
 
-- webhook Evolution -> backend
+- inbox própria no Haut SaaS
 - contato unificado
-- sincronização Chatwoot
-- envio/recebimento de mensagens
-- inbox em tempo real
+- webhooks internos
+- sincronização bidirecional
+- envio/recebimento sem abrir o Chatwoot
