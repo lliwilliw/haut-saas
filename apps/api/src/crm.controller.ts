@@ -1,6 +1,7 @@
 import { BadRequestException,Body,Controller,Get,Param,Patch,Post,Req,UseGuards } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { assertRole } from './roles';
 
 @UseGuards(JwtAuthGuard)
 @Controller()
@@ -24,6 +25,8 @@ export class CrmController {
 
   @Post('pipelines')
   createPipeline(@Req() req: any, @Body() b: any) {
+    assertRole(req.user.role, ['OWNER', 'ADMIN', 'MANAGER']);
+
     const name = String(b.name || '').trim();
     if (!name) throw new BadRequestException('Nome obrigatório');
 
@@ -46,6 +49,8 @@ export class CrmController {
 
   @Post('deals')
   async createDeal(@Req() req: any, @Body() b: any) {
+    assertRole(req.user.role, ['OWNER', 'ADMIN', 'MANAGER', 'AGENT']);
+
     const organizationId = req.user.organizationId;
 
     const pipeline = await this.prisma.pipeline.findFirst({
@@ -88,6 +93,8 @@ export class CrmController {
 
   @Patch('deals/:id/stage')
   async move(@Req() req: any, @Param('id') id: string, @Body() b: any) {
+    assertRole(req.user.role, ['OWNER', 'ADMIN', 'MANAGER', 'AGENT']);
+
     const deal = await this.prisma.deal.findFirst({
       where: { id, organizationId: req.user.organizationId },
     });
