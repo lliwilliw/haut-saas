@@ -26,8 +26,6 @@ services:
       MAUTIC_CLIENT_SECRET: ${MAUTIC_CLIENT_SECRET:-}
       EVOLUTION_API_URL: ${EVOLUTION_API_URL:-}
       EVOLUTION_API_KEY: ${EVOLUTION_API_KEY:-}
-      ACTIVEPIECES_URL: ${ACTIVEPIECES_URL:-}
-      ACTIVEPIECES_API_KEY: ${ACTIVEPIECES_API_KEY:-}
     depends_on: [postgres, redis]
     ports: ["3001:3001"]
   worker:
