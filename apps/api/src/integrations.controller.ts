@@ -1,4 +1,11 @@
-import { Controller,Get,UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @UseGuards(JwtAuthGuard)
@@ -47,6 +54,7 @@ export class IntegrationsController {
       profileName: instance?.profileName ?? null,
       profilePicUrl: instance?.profilePicUrl ?? null,
       integration: instance?.integration ?? null,
+      chatwootConnected: instance?.Chatwoot?.enabled === true,
       createdAt: instance?.createdAt ?? null,
       updatedAt: instance?.updatedAt ?? null,
       messageCount: instance?._count?.Message ?? 0,
@@ -71,6 +79,7 @@ export class IntegrationsController {
       chatwoot: {
         ...chatwoot,
         credentialsConfigured: !!process.env.CHATWOOT_API_TOKEN,
+        appUrl: chatwootUrl || null,
       },
       mautic: {
         ...mautic,
@@ -124,5 +133,78 @@ export class IntegrationsController {
         instances: [],
       };
     }
+  }
+
+  @Post('evolution/instances/:instanceName/chatwoot')
+  async connectEvolutionToChatwoot(
+    @Param('instanceName') instanceName: string,
+  ) {
+    const evolutionUrl = this.trim(process.env.EVOLUTION_API_URL);
+    const evolutionKey = process.env.EVOLUTION_API_KEY;
+    const chatwootUrl = this.trim(process.env.CHATWOOT_URL);
+    const chatwootToken = process.env.CHATWOOT_API_TOKEN;
+    const chatwootAccountId = process.env.CHATWOOT_ACCOUNT_ID;
+
+    if (!evolutionUrl || !evolutionKey) {
+      throw new BadRequestException('Evolution API não está configurada');
+    }
+
+    if (!chatwootUrl || !chatwootToken || !chatwootAccountId) {
+      throw new BadRequestException(
+        'Chatwoot precisa de URL, token e Account ID configurados',
+      );
+    }
+
+    const payload = {
+      enabled: true,
+      accountId: String(chatwootAccountId),
+      token: chatwootToken,
+      url: chatwootUrl,
+      signMsg: false,
+      signDelimiter: null,
+      nameInbox: `WhatsApp - ${instanceName}`,
+      reopenConversation: true,
+      conversationPending: false,
+      autoCreate: true,
+      importContacts: false,
+      mergeBrazilContacts: true,
+      importMessages: false,
+      daysLimitImportMessages: 7,
+      ignoreJids: [],
+    };
+
+    const response = await fetch(
+      `${evolutionUrl}/chatwoot/set/${encodeURIComponent(instanceName)}`,
+      {
+        method: 'POST',
+        headers: {
+          apikey: evolutionKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      },
+    );
+
+    const body = await response.json().catch(async () => ({
+      message: await response.text().catch(() => ''),
+    }));
+
+    if (!response.ok) {
+      const message =
+        body?.response?.message?.[0] ||
+        body?.message ||
+        `Evolution HTTP ${response.status}`;
+      throw new BadRequestException(
+        Array.isArray(message) ? message.join(', ') : String(message),
+      );
+    }
+
+    return {
+      ok: true,
+      instanceName,
+      inboxName: payload.nameInbox,
+      chatwootUrl,
+      webhookUrl: body?.webhook_url ?? null,
+    };
   }
 }
