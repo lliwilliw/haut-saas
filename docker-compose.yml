@@ -17,10 +17,10 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/haut_saas
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-local-development-secret-change-me}
+      INTEGRATION_ENCRYPTION_KEY: ${INTEGRATION_ENCRYPTION_KEY:-local-integration-key-change-me}
       CORS_ORIGIN: http://localhost:3000
       CHATWOOT_URL: ${CHATWOOT_URL:-}
-      CHATWOOT_API_TOKEN: ${CHATWOOT_API_TOKEN:-}
-      CHATWOOT_ACCOUNT_ID: ${CHATWOOT_ACCOUNT_ID:-}
+      CHATWOOT_PLATFORM_TOKEN: ${CHATWOOT_PLATFORM_TOKEN:-}
       MAUTIC_URL: ${MAUTIC_URL:-}
       MAUTIC_CLIENT_ID: ${MAUTIC_CLIENT_ID:-}
       MAUTIC_CLIENT_SECRET: ${MAUTIC_CLIENT_SECRET:-}
