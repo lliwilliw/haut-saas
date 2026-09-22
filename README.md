@@ -1,25 +1,37 @@
-# Haut SaaS Starter
+# Haut SaaS
 
-Base executável para centralizar Chatwoot, Mautic e Evolution API atrás de um frontend/backend próprio.
+Produto SaaS multi-tenant que usa engines internas de mensageria, atendimento e marketing sem expô-las ao cliente final.
 
-## Incluído
+## Arquitetura
 
-- Next.js frontend
-- NestJS API
-- BullMQ worker
-- PostgreSQL + Prisma
-- Redis
-- cadastro/login JWT
-- organização multi-tenant inicial
-- contatos
-- pipeline CRM e negócios
-- status das três integrações principais
-- leitura segura de instâncias Evolution pelo backend
-- visualização amigável das instâncias WhatsApp, sem expor tokens
-- Dockerfiles para Easypanel
-- Docker Compose para teste local
+O navegador fala somente com o backend do Haut SaaS.
 
-## Teste local
+- Next.js — frontend do produto
+- NestJS — API multi-tenant
+- PostgreSQL + Prisma — dados do produto
+- Redis + worker — jobs e automações
+- Evolution API — engine interna de WhatsApp
+- Chatwoot — engine interna de atendimento
+- Mautic — engine interna de marketing
+
+O cliente não precisa acessar, conhecer ou configurar diretamente Evolution, Chatwoot ou Mautic.
+
+## Fundação SaaS
+
+- organizações isoladas por `organizationId`
+- usuários e memberships
+- papéis OWNER, ADMIN, MANAGER, AGENT, MARKETING e VIEWER
+- convites de equipe com token de uso único e expiração
+- revogação imediata de acesso: o membership é revalidado em cada requisição autenticada
+- RBAC no backend
+- cofre de credenciais por organização com AES-256-GCM
+- credenciais nunca retornadas em texto puro depois de salvas
+- auditoria por organização
+- provisionamento de WhatsApp por tenant
+- provisionamento de conta interna de atendimento por tenant
+- contatos e CRM escopados por organização
+
+## Desenvolvimento local
 
 ```bash
 cp .env.example .env
@@ -28,16 +40,12 @@ docker compose up --build
 
 Abra `http://localhost:3000`. A API responde em `http://localhost:3001/health`.
 
-No primeiro cadastro, o sistema cria a organização e um pipeline padrão com Novo, Qualificação, Proposta e Ganho.
-
 ## Deploy
 
 Veja `EASYPANEL.md`.
 
-## Escopo desta versão
-
-Isto é a fundação funcional do produto, não o SaaS final inteiro. Ainda faltam a inbox própria, webhooks, sincronização bidirecional de contatos/mensagens, campanhas Mautic, billing, Meta Cloud API e Google/Meta Ads. As automações centrais ficam no backend/worker próprio; não há dependência de Activepieces.
-
 ## Segurança
 
-Não coloque chaves reais no Git. Use Environment do Easypanel e rotacione segredos já expostos em chats/logs. O backend filtra a resposta da Evolution antes de enviá-la ao navegador para não expor o token da instância.
+Segredos ficam apenas nos serviços backend. Não use credenciais privadas em `NEXT_PUBLIC_*`, não grave segredos no Git e não habilite a criação de arquivo `.env` no Easypanel para os serviços Haut.
+
+Credenciais internas por tenant são criptografadas antes de persistirem no banco. Endpoints sensíveis também verificam organização e papel no backend; esconder controles no frontend não é considerado mecanismo de autorização.
